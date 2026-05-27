@@ -42,6 +42,41 @@ dayjs.locale('zh-cn')
 const { Text, Paragraph } = Typography
 const { Search } = Input
 
+const MEMORY_TYPE_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+  research_finding: { label: '研究发现', color: '#1677ff', icon: <BulbOutlined /> },
+  industry_entity: { label: '行业实体', color: '#52c41a', icon: <FileTextOutlined /> },
+  preference: { label: '用户偏好', color: '#fa8c16', icon: <ClockCircleOutlined /> },
+  general: { label: '通用', color: '#8c8c8c', icon: <BulbOutlined /> },
+}
+
+const LINK_TYPE_LABELS: Record<string, string> = {
+  derived_from: '来源于',
+  related_to: '关联到',
+  contradicts: '矛盾于',
+}
+
+function getMemoryTypeConfig(type: string) {
+  return MEMORY_TYPE_CONFIG[type] || MEMORY_TYPE_CONFIG.general
+}
+
+function formatFieldLabel(key: string): string {
+  const labels: Record<string, string> = {
+    topic: '研究主题',
+    conclusion: '核心结论',
+    confidence: '置信度',
+    sources: '信息来源',
+    related_entities: '相关实体',
+    entity_name: '实体名称',
+    entity_type: '实体类型',
+    industry: '所属行业',
+    key_facts: '关键事实',
+    last_researched: '最近研究时间',
+    preference_type: '偏好类型',
+    value: '偏好值',
+  }
+  return labels[key] || key.replace(/_/g, ' ')
+}
+
 export default function MemoryPage() {
   const navigate = useNavigate()
   const { isLoggedIn } = useSnapshot(authState)
@@ -121,91 +156,104 @@ export default function MemoryPage() {
     setSearchResults(null)
   }
 
-  const renderKeyInsights = (insights: Record<string, unknown> | undefined) => {
-    if (!insights || typeof insights !== 'object') return null
-
-    const items = Object.entries(insights).map(([key, value]) => ({
-      key,
-      label: formatKeyLabel(key),
-      children: <Text>{String(value)}</Text>,
-    }))
-
-    if (items.length === 0) return null
-
-    return (
-      <Collapse
-        ghost
-        size="small"
-        items={items}
-        className={styles['insights-collapse']}
-      />
-    )
-  }
-
-  const formatKeyLabel = (key: string): string => {
-    const labels: Record<string, string> = {
-      main_topics: '主要话题',
-      key_entities: '关键实体',
-      sentiment: '情感倾向',
-      action_items: '待办事项',
-      decisions: '做出的决定',
-      questions: '问题',
-      summary: '总结',
-    }
-    return labels[key] || key.replace(/_/g, ' ')
-  }
-
   const renderMemoryList = () => (
     <List
       className={styles['memory-list']}
       loading={loading}
       dataSource={memories}
       locale={{ emptyText: <Empty description="暂无记忆" /> }}
-      renderItem={(memory) => (
-        <List.Item
-          className={styles['memory-item']}
-          actions={[
-            <Popconfirm
-              key="delete"
-              title="确定删除此记忆？"
-              description="删除后将无法恢复"
-              onConfirm={() => handleDelete(memory.id)}
-            >
-              <Button type="text" danger size="small" icon={<DeleteOutlined />} />
-            </Popconfirm>,
-          ]}
-        >
-          <List.Item.Meta
-            avatar={
-              <div className={styles['memory-icon']}>
-                <BulbOutlined />
-              </div>
-            }
-            title={
-              <div className={styles['memory-title']}>
-                <Text ellipsis={{ tooltip: true }} style={{ flex: 1 }}>
-                  {memory.summary}
-                </Text>
-                {memory.token_count && (
-                  <Tag color="blue">{memory.token_count} tokens</Tag>
-                )}
-              </div>
-            }
-            description={
-              <div className={styles['memory-meta']}>
-                {renderKeyInsights(memory.key_insights)}
-                <div className={styles['memory-footer']}>
-                  <span>
-                    <ClockCircleOutlined style={{ marginRight: 4 }} />
-                    {dayjs(memory.created_at).format('YYYY-MM-DD HH:mm')}
-                  </span>
-                  <span>{dayjs(memory.created_at).fromNow()}</span>
+      renderItem={(memory) => {
+        const typeConfig = getMemoryTypeConfig(memory.memory_type)
+        return (
+          <List.Item
+            className={styles['memory-item']}
+            actions={[
+              <Popconfirm
+                key="delete"
+                title="确定删除此记忆？"
+                description="删除后将无法恢复"
+                onConfirm={() => handleDelete(memory.id)}
+              >
+                <Button type="text" danger size="small" icon={<DeleteOutlined />} />
+              </Popconfirm>,
+            ]}
+          >
+            <List.Item.Meta
+              avatar={
+                <div className={styles['memory-icon']} style={{ background: `linear-gradient(135deg, ${typeConfig.color}20, ${typeConfig.color}40)` }}>
+                  <span style={{ color: typeConfig.color }}>{typeConfig.icon}</span>
                 </div>
-              </div>
-            }
-          />
-        </List.Item>
-      )}
+              }
+              title={
+                <div className={styles['memory-title']}>
+                  <Tag color={typeConfig.color}>{typeConfig.label}</Tag>
+                  <Text ellipsis={{ tooltip: true }} style={{ flex: 1 }}>
+                    {memory.abstract || memory.summary}
+                  </Text>
+                  {memory.token_count && (
+                    <Tag color="blue">{memory.token_count} tokens</Tag>
+                  )}
+                </div>
+              }
+              description={
+                <div className={styles['memory-meta']}>
+                  {memory.abstract && memory.summary && (
+                    <Paragraph
+                      ellipsis={{ rows: 2, expandable: true, symbol: '展开' }}
+                      className={styles['memory-summary']}
+                      type="secondary"
+                    >
+                      {memory.summary}
+                    </Paragraph>
+                  )}
+                  {memory.overview && (
+                    <div className={styles['memory-overview']}>
+                      <Text type="secondary" italic style={{ fontSize: 12 }}>
+                        {memory.overview}
+                      </Text>
+                    </div>
+                  )}
+                  {memory.fields && Object.keys(memory.fields).length > 0 && (
+                    <Collapse
+                      ghost
+                      size="small"
+                      className={styles['fields-collapse']}
+                      items={[{
+                        key: 'fields',
+                        label: <Text type="secondary" style={{ fontSize: 12 }}>字段详情</Text>,
+                        children: (
+                          <div className={styles['fields-grid']}>
+                            {Object.entries(memory.fields).map(([key, value]) => (
+                              <div key={key} className={styles['field-item']}>
+                                <Text type="secondary" style={{ fontSize: 11 }}>{formatFieldLabel(key)}</Text>
+                                <Text style={{ fontSize: 13 }}>{String(value)}</Text>
+                              </div>
+                            ))}
+                          </div>
+                        ),
+                      }]}
+                    />
+                  )}
+                  {memory.links && memory.links.length > 0 && (
+                    <div className={styles['memory-links']}>
+                      <Text type="secondary" style={{ fontSize: 11 }}>
+                        关联: {memory.links.map(l => LINK_TYPE_LABELS[l.link_type] || l.link_type).join(' · ')}
+                      </Text>
+                    </div>
+                  )}
+                  <div className={styles['memory-footer']}>
+                    <span>
+                      <ClockCircleOutlined style={{ marginRight: 4 }} />
+                      {dayjs(memory.created_at).format('YYYY-MM-DD HH:mm')}
+                    </span>
+                    <span>{dayjs(memory.created_at).fromNow()}</span>
+                  </div>
+                </div>
+              }
+            />
+          </List.Item>
+        )
+      }}
     />
   )
 
@@ -222,37 +270,40 @@ export default function MemoryPage() {
         loading={searchLoading}
         dataSource={searchResults || []}
         locale={{ emptyText: <Empty description="未找到相关记忆" /> }}
-        renderItem={(result) => (
-          <List.Item
-            className={styles['memory-item']}
-            actions={[
-              <Popconfirm
-                key="delete"
-                title="确定删除此记忆？"
-                onConfirm={() => handleDelete(result.id)}
-              >
-                <Button type="text" danger size="small" icon={<DeleteOutlined />} />
-              </Popconfirm>,
-            ]}
-          >
-            <List.Item.Meta
-              avatar={
-                <div className={styles['memory-icon']}>
-                  <FileTextOutlined />
-                </div>
-              }
-              title={
-                <div className={styles['memory-title']}>
-                  <Text ellipsis={{ tooltip: true }} style={{ flex: 1 }}>
-                    {result.content}
-                  </Text>
-                  <Tag color="purple">相关度 {(result.score * 100).toFixed(0)}%</Tag>
-                  <Tag>{result.memory_type}</Tag>
-                </div>
-              }
-            />
-          </List.Item>
-        )}
+        renderItem={(result) => {
+          const typeConfig = getMemoryTypeConfig(result.memory_type)
+          return (
+            <List.Item
+              className={styles['memory-item']}
+              actions={[
+                <Popconfirm
+                  key="delete"
+                  title="确定删除此记忆？"
+                  onConfirm={() => handleDelete(result.id)}
+                >
+                  <Button type="text" danger size="small" icon={<DeleteOutlined />} />
+                </Popconfirm>,
+              ]}
+            >
+              <List.Item.Meta
+                avatar={
+                  <div className={styles['memory-icon']} style={{ background: `linear-gradient(135deg, ${typeConfig.color}20, ${typeConfig.color}40)` }}>
+                    <span style={{ color: typeConfig.color }}>{typeConfig.icon}</span>
+                  </div>
+                }
+                title={
+                  <div className={styles['memory-title']}>
+                    <Tag color={typeConfig.color}>{typeConfig.label}</Tag>
+                    <Tag color="purple">相关度 {(result.score * 100).toFixed(0)}%</Tag>
+                    <Text ellipsis={{ tooltip: true }} style={{ flex: 1 }}>
+                      {result.content}
+                    </Text>
+                  </div>
+                }
+              />
+            </List.Item>
+          )
+        }}
       />
     </div>
   )

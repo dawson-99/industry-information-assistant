@@ -5,11 +5,23 @@
 
 import { request } from './request'
 
+export interface MemoryLink {
+  to_uri: string
+  link_type: 'derived_from' | 'related_to' | 'contradicts'
+  description?: string
+}
+
 export interface Memory {
   id: string
   session_id?: string
+  memory_type: string
   summary: string
+  abstract?: string
+  overview?: string
   key_insights?: Record<string, unknown>
+  fields?: Record<string, string>
+  links: MemoryLink[]
+  backlinks: MemoryLink[]
   token_count?: number
   created_at: string
 }
@@ -66,5 +78,7 @@ export function deleteMemory(memoryId: string) {
  * 获取记忆上下文
  */
 export function getMemoryContext(query: string) {
-  return request.get<{ context: string }>(`/memories/context/${encodeURIComponent(query)}`)
+  return request.get<{ context_text: string; memory_ids: string[] }>(
+    `/memories/context/${encodeURIComponent(query)}`,
+  )
 }

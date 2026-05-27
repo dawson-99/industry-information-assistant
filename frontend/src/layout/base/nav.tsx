@@ -73,8 +73,7 @@ export function Nav() {
         key: 'memory',
         label: '记忆库',
         icon: IconMemory,
-        href: '#',
-        onClick: () => message.info('暂未开放'),
+        href: '/memory',
       },
       {
         key: 'knowledge',
