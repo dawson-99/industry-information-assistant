@@ -77,9 +77,15 @@ class LongTermMemory(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"))
     session_id = Column(UUID(as_uuid=True), ForeignKey("chat_sessions.id", ondelete="SET NULL"), nullable=True)
-    summary = Column(Text, nullable=False)  # 记忆摘要
-    key_insights = Column(JSONB)  # 关键洞察
-    milvus_ids = Column(ARRAY(Text))  # Milvus 中的向量 ID
+    memory_type = Column(String(64), default="general")       # 新增
+    summary = Column(Text, nullable=False)                     # L2 完整内容
+    abstract = Column(Text)                                    # 新增: L0 摘要
+    overview = Column(Text)                                    # 新增: L1 概览
+    key_insights = Column(JSONB)                               # 保留兼容
+    fields = Column(JSONB)                                     # 新增: 动态字段
+    links = Column(JSONB)                                      # 新增: 正向链接
+    backlinks = Column(JSONB)                                  # 新增: 反向链接
+    milvus_ids = Column(ARRAY(Text))
     token_count = Column(Integer)
     created_at = Column(DateTime, default=datetime.utcnow)
 
