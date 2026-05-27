@@ -55,95 +55,101 @@
     }
   }
 
-  // 热门资讯区域
+  // 精选资讯区域
   .newchat-page__section {
-    margin-top: 24px;
+    margin-top: 28px;
 
     .section-header {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 12px;
-
-      .section-icon {
-        width: 20px;
-        height: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        > img {
-          width: 16px;
-          height: 16px;
-          opacity: 0.6;
-        }
-      }
+      margin-bottom: 16px;
 
       .section-title {
-        font-size: 13px;
-        font-weight: 500;
-        color: #8c8c8c;
+        font-size: 15px;
+        font-weight: 600;
+        color: #262626;
       }
     }
   }
 
-  // 热门资讯列表 - 和招标信息页面一致
+  // 精选资讯列表
   .newchat-page__news-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
   }
 
   .newchat-page__news-card {
-    padding: 16px;
-    background: #fff;
-    border-radius: 8px;
-    border: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background: #fafafa;
+    border-radius: 10px;
     cursor: pointer;
     transition: all 0.2s;
 
     &:hover {
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      border-color: #d9d9d9;
+      background: #f0f5ff;
     }
 
-    .news-card__title {
-      font-size: 16px;
-      font-weight: 500;
-      color: #262626;
-      margin-bottom: 10px;
-      line-height: 1.5;
-    }
+    .news-card__body {
+      flex: 1;
+      min-width: 0;
 
-    .news-card__info {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 8px;
-      flex-wrap: wrap;
+      .news-card__title {
+        font-size: 15px;
+        font-weight: 500;
+        color: #262626;
+        line-height: 1.4;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
 
-      .info-location {
+      .news-card__info {
         display: flex;
         align-items: center;
-        gap: 4px;
-        font-size: 13px;
-        color: #595959;
+        gap: 10px;
+        margin-top: 8px;
+        flex-wrap: wrap;
+
+        .info-tag {
+          font-size: 12px;
+          color: #8c8c8c;
+          padding: 1px 6px;
+          background: #f0f0f0;
+          border-radius: 4px;
+        }
+
+        .info-location {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 12px;
+          color: #8c8c8c;
+        }
       }
     }
 
     .news-card__meta {
+      flex-shrink: 0;
       display: flex;
       align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-
-      .meta-item {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        font-size: 13px;
-        color: #8c8c8c;
-      }
+      gap: 4px;
+      font-size: 12px;
+      color: #bfbfbf;
+      margin-left: 16px;
     }
+  }
+
+  .news-loading {
+    padding: 40px;
+    text-align: center;
+  }
+
+  .news-empty {
+    padding: 40px;
+    text-align: center;
+    color: #bfbfbf;
+    font-size: 13px;
   }
 }

@@ -132,9 +132,9 @@ const getStoredIndustryId = (): string => {
   if (typeof window !== 'undefined') {
     const stored = localStorage.getItem('selected_industry_id')
     console.log('[industry store] 从 localStorage 读取行业:', stored)
-    return stored || 'smart_transportation'
+    return stored || 'finance'
   }
-  return 'smart_transportation'
+  return 'finance'
 }
 
 // 创建状态

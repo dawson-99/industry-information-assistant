@@ -5,7 +5,6 @@
 
 import * as api from '@/api'
 import type { NewsItem, BiddingItem } from '@/api/news'
-import IconNews from '@/assets/layout/news.svg'
 import ComSender, { AttachmentInfo } from '@/components/sender'
 import { useQuery } from '@/router/hook'
 import { deviceState } from '@/store/device'
@@ -278,7 +277,7 @@ export default function NewChat() {
   return (
     <div className={styles['newchat-page']}>
       <div className={styles['newchat-page__header']}>
-        {query.get('title') || currentIndustryName}
+        {query.get('title') || '行业助手'}
       </div>
 
       <ComSender
@@ -305,17 +304,14 @@ export default function NewChat() {
         </div>
       </div>
 
-      {/* 热门资讯 */}
+      {/* 精选资讯 */}
       <div className={styles['newchat-page__section']}>
         <div className={styles['section-header']}>
-          <div className={styles['section-icon']}>
-            <img src={IconNews} />
-          </div>
-          <span className={styles['section-title']}>热门资讯</span>
+          <span className={styles['section-title']}>精选资讯</span>
         </div>
         <div className={styles['newchat-page__news-list']}>
           {newsLoading ? (
-            <div style={{ padding: '20px', textAlign: 'center' }}>
+            <div className={styles['news-loading']}>
               <Spin size="small" />
             </div>
           ) : hotList.length > 0 ? (
@@ -325,40 +321,33 @@ export default function NewChat() {
                 key={item.id}
                 onClick={() => send(`请帮我分析：${item.title}`)}
               >
-                <div className={styles['news-card__title']}>{item.title}</div>
-                <div className={styles['news-card__info']}>
-                  <Tag color="blue">
-                    {item.type === 'news'
-                      ? (item.category || '资讯')
-                      : `招标 | ${item.category || '招标公告'}`}
-                  </Tag>
-                  {item.type === 'bidding' && (item.province || item.city) && (
-                    <span className={styles['info-location']}>
-                      <EnvironmentOutlined />
-                      {[item.province, item.city].filter(Boolean).join(' ')}
-                    </span>
-                  )}
-                  {item.type === 'news' && item.department && (
-                    <span className={styles['info-location']}>
-                      <EnvironmentOutlined />
-                      {item.department}
-                    </span>
-                  )}
+                <div className={styles['news-card__body']}>
+                  <div className={styles['news-card__title']}>{item.title}</div>
+                  <div className={styles['news-card__info']}>
+                    <Tag color={item.type === 'news' ? 'blue' : 'orange'}>
+                      {item.type === 'news' ? '资讯' : '招标'}
+                    </Tag>
+                    {item.category && (
+                      <span className={styles['info-tag']}>{item.category}</span>
+                    )}
+                    {(item.province || item.department) && (
+                      <span className={styles['info-location']}>
+                        <EnvironmentOutlined />
+                        {item.province || item.department}
+                        {item.city ? ` · ${item.city}` : ''}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className={styles['news-card__meta']}>
-                  <span className={styles['meta-item']}>
-                    <ClockCircleOutlined />
-                    发布于 {dayjs(item.date).format('YYYY/MM/DD')}
-                  </span>
-                  <span className={styles['meta-item']}>
-                    ID: {item.id.slice(0, 8)}...
-                  </span>
+                  <ClockCircleOutlined />
+                  {dayjs(item.date).format('YYYY/MM/DD')}
                 </div>
               </div>
             ))
           ) : (
-            <div style={{ padding: '20px', textAlign: 'center', color: '#bfbfbf', fontSize: 13 }}>
-              暂无资讯，请点击"行业资讯"页面采集
+            <div className={styles['news-empty']}>
+              暂无资讯
             </div>
           )}
         </div>
