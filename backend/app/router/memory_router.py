@@ -24,8 +24,14 @@ class MemoryResponse(BaseModel):
     """记忆响应"""
     id: str = Field(..., description="记忆ID")
     session_id: Optional[str] = Field(None, description="关联会话ID")
-    summary: str = Field(..., description="记忆摘要")
+    memory_type: str = Field("preference", description="记忆类型")
+    summary: str = Field(..., description="记忆摘要 (L2)")
+    abstract: Optional[str] = Field(None, description="L0 摘要")
+    overview: Optional[str] = Field(None, description="L1 概览")
     key_insights: Optional[dict] = Field(None, description="关键洞察")
+    fields: Optional[dict] = Field(None, description="动态字段")
+    links: list = Field(default_factory=list, description="正向链接")
+    backlinks: list = Field(default_factory=list, description="反向链接")
     token_count: Optional[int] = Field(None, description="Token数量")
     created_at: datetime = Field(..., description="创建时间")
 
@@ -82,8 +88,14 @@ async def get_memories(
             MemoryResponse(
                 id=str(mem.id),
                 session_id=str(mem.session_id) if mem.session_id else None,
+                memory_type=mem.memory_type or "preference",
                 summary=mem.summary,
+                abstract=mem.abstract,
+                overview=mem.overview,
                 key_insights=mem.key_insights,
+                fields=mem.fields,
+                links=mem.links or [],
+                backlinks=mem.backlinks or [],
                 token_count=mem.token_count,
                 created_at=mem.created_at,
             )
@@ -122,8 +134,14 @@ async def get_memory(
     return MemoryResponse(
         id=str(memory.id),
         session_id=str(memory.session_id) if memory.session_id else None,
+        memory_type=memory.memory_type or "preference",
         summary=memory.summary,
+        abstract=memory.abstract,
+        overview=memory.overview,
         key_insights=memory.key_insights,
+        fields=memory.fields,
+        links=memory.links or [],
+        backlinks=memory.backlinks or [],
         token_count=memory.token_count,
         created_at=memory.created_at,
     )
@@ -195,24 +213,32 @@ async def create_memory_from_session(
 
     # 创建记忆
     memory_service = get_memory_service()
-    memory = memory_service.create_memory(
+    memories = memory_service.create_memory(
         db=db,
         user_id=str(current_user.id),
         session_id=str(session_uuid),
         messages=messages
     )
 
-    if not memory:
+    if not memories:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="创建记忆失败"
         )
 
+    # 返回第一条记忆（兼容原接口）
+    memory = memories[0]
     return MemoryResponse(
         id=str(memory.id),
         session_id=str(memory.session_id) if memory.session_id else None,
+        memory_type=memory.memory_type or "preference",
         summary=memory.summary,
+        abstract=memory.abstract,
+        overview=memory.overview,
         key_insights=memory.key_insights,
+        fields=memory.fields,
+        links=memory.links or [],
+        backlinks=memory.backlinks or [],
         token_count=memory.token_count,
         created_at=memory.created_at,
     )
@@ -248,10 +274,9 @@ async def get_memory_context(
 ):
     """获取与查询相关的记忆上下文"""
     memory_service = get_memory_service()
-    context = memory_service.build_memory_context(
+    result = memory_service.build_memory_context(
         user_id=str(current_user.id),
         current_query=query,
-        max_memories=3
+        max_memories=5,
     )
-
-    return {"context": context}
+    return result

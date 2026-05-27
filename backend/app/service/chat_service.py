@@ -285,11 +285,12 @@ class ChatService:
         if user_id:
             try:
                 memory_service = get_memory_service()
-                memory_context = memory_service.build_memory_context(
+                result = memory_service.build_memory_context(
                     user_id=user_id,
                     current_query=question,
                     max_memories=3
                 )
+                memory_context = result.get("context_text", "") if isinstance(result, dict) else result
             except Exception as e:
                 print(f"获取长期记忆失败: {e}")
 

@@ -1,6 +1,6 @@
 """记忆类型配置 Pydantic Schema"""
 from enum import Enum
-from typing import Any, Optional
+
 from pydantic import BaseModel, Field
 
 
