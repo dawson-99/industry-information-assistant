@@ -1,0 +1,19 @@
+# /etc/systemd/system/industry-backend.service
+# 行业信息助手后端服务
+
+[Unit]
+Description=Industry Information Assistant Backend
+After=network.target docker.service
+Wants=docker.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/industry_assistant/backend
+EnvironmentFile=/opt/industry_assistant/backend/.env
+ExecStart=/usr/bin/python -m uvicorn app.app_main:app --host 127.0.0.1 --port 8000 --workers 4
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

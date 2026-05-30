@@ -132,6 +132,10 @@ export default function LoginPage() {
                   />
                 </Form.Item>
 
+                <div style={{ marginBottom: 16, padding: '8px 12px', background: '#f6f8fa', borderRadius: 6, fontSize: 13, color: '#666' }}>
+                  可使用用户名「尼克狐尼克」，密码 123456 查看效果
+                </div>
+
                 <Form.Item>
                   <Button
                     type="primary"

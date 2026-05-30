@@ -43,7 +43,7 @@ check_docker() {
 
 # 启动中间件服务
 start_services() {
-    log_info "正在启动中间件服务 (PostgreSQL, Redis, Milvus, Elasticsearch)..."
+    log_info "正在启动中间件服务 (PostgreSQL, Redis, Milvus)..."
     docker-compose up -d
 
     log_info "等待服务启动完成..."
@@ -58,7 +58,6 @@ start_services() {
     echo "  - PostgreSQL: localhost:5432"
     echo "  - Redis: localhost:6379"
     echo "  - Milvus: localhost:19530"
-    echo "  - Elasticsearch: localhost:1200"
     echo "  - MinIO Console: localhost:9001 (admin/minioadmin)"
     echo ""
     log_info "现在可以启动前后端服务了"
@@ -105,12 +104,6 @@ check_service_health() {
         log_warning "Milvus: 启动中..."
     fi
 
-    # Elasticsearch
-    if curl -s http://localhost:1200/_cluster/health > /dev/null 2>&1; then
-        log_success "Elasticsearch: 运行中"
-    else
-        log_warning "Elasticsearch: 启动中..."
-    fi
 }
 
 # 查看服务状态

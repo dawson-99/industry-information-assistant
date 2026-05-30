@@ -15,8 +15,9 @@ import {
   Empty,
   Spin,
   Typography,
-  Timeline,
   Collapse,
+  Modal,
+  Select,
 } from 'antd'
 import {
   DeleteOutlined,
@@ -25,6 +26,7 @@ import {
   ClockCircleOutlined,
   FileTextOutlined,
   ReloadOutlined,
+  ThunderboltOutlined,
 } from '@ant-design/icons'
 import { useSnapshot } from 'valtio'
 import { authState } from '@/store/auth'
@@ -85,6 +87,13 @@ export default function MemoryPage() {
   const [searchResults, setSearchResults] = useState<MemorySearchResult[] | null>(null)
   const [searchLoading, setSearchLoading] = useState(false)
   const [total, setTotal] = useState(0)
+
+  // 生成记忆弹窗
+  const [createModalOpen, setCreateModalOpen] = useState(false)
+  const [sessions, setSessions] = useState<api.session.Session[]>([])
+  const [sessionsLoading, setSessionsLoading] = useState(false)
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null)
+  const [createLoading, setCreateLoading] = useState(false)
 
   const fetchMemories = useCallback(async () => {
     setLoading(true)
@@ -154,6 +163,42 @@ export default function MemoryPage() {
 
   const handleClearSearch = () => {
     setSearchResults(null)
+  }
+
+  const handleOpenCreateModal = async () => {
+    setCreateModalOpen(true)
+    setSessionsLoading(true)
+    setSelectedSessionId(null)
+    try {
+      const res = await api.session.getSessions({ limit: 20 })
+      if (res.data) {
+        setSessions(res.data)
+      }
+    } catch {
+      message.error('获取会话列表失败')
+    } finally {
+      setSessionsLoading(false)
+    }
+  }
+
+  const handleCreateMemory = async () => {
+    if (!selectedSessionId) {
+      message.warning('请选择要生成记忆的会话')
+      return
+    }
+    setCreateLoading(true)
+    try {
+      const res = await api.memory.createMemory(selectedSessionId)
+      if (res.data) {
+        message.success(`成功生成记忆: ${(res.data as any).memory_type || ''}`)
+        setCreateModalOpen(false)
+        fetchMemories()
+      }
+    } catch (error: any) {
+      message.error(error?.response?.data?.detail || '生成记忆失败')
+    } finally {
+      setCreateLoading(false)
+    }
   }
 
   const renderMemoryList = () => (
@@ -316,6 +361,9 @@ export default function MemoryPage() {
           <Text type="secondary">共 {total} 条记忆</Text>
         </div>
         <div className={styles['header-right']}>
+          <Button icon={<ThunderboltOutlined />} onClick={handleOpenCreateModal}>
+            生成记忆
+          </Button>
           <Button icon={<ReloadOutlined />} onClick={fetchMemories} loading={loading}>
             刷新
           </Button>
@@ -337,6 +385,37 @@ export default function MemoryPage() {
       <Card className={styles['content-card']}>
         {searchResults ? renderSearchResults() : renderMemoryList()}
       </Card>
+
+      <Modal
+        title="从历史会话生成记忆"
+        open={createModalOpen}
+        onOk={handleCreateMemory}
+        onCancel={() => setCreateModalOpen(false)}
+        confirmLoading={createLoading}
+        okText="生成"
+        cancelText="取消"
+      >
+        <div style={{ marginBottom: 16 }}>
+          <Text type="secondary">
+            选择一条历史会话，AI 将自动提取其中的研究成果和行业实体，生成结构化长期记忆。
+          </Text>
+        </div>
+        <Select
+          showSearch
+          style={{ width: '100%' }}
+          placeholder="选择会话..."
+          loading={sessionsLoading}
+          value={selectedSessionId}
+          onChange={(val) => setSelectedSessionId(val)}
+          filterOption={(input, option) =>
+            (option?.label as string)?.toLowerCase().includes(input.toLowerCase())
+          }
+          options={sessions.map((s) => ({
+            label: `${s.title || s.id} (${s.message_count} 条消息)`,
+            value: s.id,
+          }))}
+        />
+      </Modal>
     </div>
   )
 }
